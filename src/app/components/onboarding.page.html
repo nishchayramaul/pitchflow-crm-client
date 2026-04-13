@@ -1,0 +1,80 @@
+<main class="onboarding-shell">
+  <section class="onboarding-card">
+    <header>
+      <p class="eyebrow">PitchFlow</p>
+      <h1>{{ currentStep === 'signin' ? 'Sign in with Google' : 'Claim your custom link' }}</h1>
+      <p class="subtext">
+        {{
+          currentStep === 'signin'
+            ? 'Continue with Google or get a passwordless magic link on email.'
+            : 'Set up your public identity and publish your profile URL.'
+        }}
+      </p>
+    </header>
+
+    @if (currentStep === 'signin') {
+      <div class="form-grid">
+        @if (authError) {
+          <p class="error">{{ authError }}</p>
+        }
+
+        <button class="google-btn" type="button" [disabled]="authLoading" (click)="signInWithGoogle()">
+          {{ authLoading ? 'Checking session...' : 'Continue with Google' }}
+        </button>
+
+        <p class="auth-separator">or</p>
+
+        <form [formGroup]="emailForm" (ngSubmit)="sendMagicLink()" class="form-grid">
+          <label>
+            Work Email
+            <input type="email" formControlName="email" placeholder="name@yourdomain.com" />
+          </label>
+          <button class="primary-btn" type="submit" [disabled]="magicLinkLoading">
+            {{ magicLinkLoading ? 'Sending link...' : 'Send Magic Link' }}
+          </button>
+        </form>
+
+        @if (magicLinkMessage) {
+          <p class="success">{{ magicLinkMessage }}</p>
+        }
+      </div>
+    } @else {
+      <form class="form-grid" [formGroup]="claimForm" (ngSubmit)="finalizeProfile()">
+        <label>
+          Display Name
+          <input type="text" formControlName="displayName" placeholder="Tech Reviewer Pro" />
+        </label>
+
+        <label>
+          Custom Link
+          <div class="slug-input-wrap">
+            <span>pitchflow.in/</span>
+            <input type="text" formControlName="slug" placeholder="your-name" />
+            @if (slugStatus === 'checking') {
+              <span class="spinner"></span>
+            } @else if (slugStatus === 'available') {
+              <span class="success-icon">✓</span>
+            }
+          </div>
+        </label>
+
+        <p
+          class="hint"
+          [class.success]="slugStatus === 'available'"
+          [class.error]="slugStatus === 'taken' || !!slugError"
+        >
+          {{ slugError || slugHelpText }}
+        </p>
+
+        @if (claimError) {
+          <p class="error">{{ claimError }}</p>
+        }
+
+        <button class="primary-btn" type="submit" [disabled]="isFinalizing || slugStatus !== 'available'">
+          {{ isFinalizing ? 'Generating...' : 'Generate Link' }}
+        </button>
+        <button class="google-btn" type="button" (click)="signOut()">Sign out</button>
+      </form>
+    }
+  </section>
+</main>

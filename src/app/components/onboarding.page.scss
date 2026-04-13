@@ -1,0 +1,156 @@
+.onboarding-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  background: #121212;
+}
+
+.onboarding-card {
+  width: min(100%, 560px);
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 18px;
+  padding: 2rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+header {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #adadad;
+  font-size: 0.8rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+}
+
+.subtext {
+  margin-top: 0.6rem;
+  color: #a0a0a0;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: #d7d7d7;
+}
+
+input {
+  height: 2.8rem;
+  background: #111;
+  border: 1px solid #303030;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0 0.85rem;
+  outline: none;
+}
+
+input:focus {
+  border-color: #6f3dff;
+}
+
+.google-btn,
+.primary-btn {
+  height: 2.9rem;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.google-btn {
+  background: #272727;
+}
+
+.primary-btn {
+  background: linear-gradient(120deg, #6f3dff 0%, #8a2dff 100%);
+}
+
+.auth-separator {
+  margin: 0;
+  text-align: center;
+  color: #8f8f8f;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.primary-btn[disabled],
+.google-btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.slug-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #303030;
+  border-radius: 10px;
+  padding: 0 0.7rem;
+  background: #111;
+}
+
+.slug-input-wrap span {
+  color: #8a8a8a;
+  font-size: 0.9rem;
+}
+
+.slug-input-wrap input {
+  border: 0;
+  background: transparent;
+  flex: 1;
+  padding: 0;
+}
+
+.hint {
+  margin: 0;
+  color: #a0a0a0;
+  font-size: 0.85rem;
+}
+
+.error {
+  margin: 0;
+  color: #ff5b7d;
+  font-size: 0.84rem;
+}
+
+.success {
+  color: #30d66a;
+}
+
+.success-icon {
+  color: #30d66a !important;
+  font-weight: 700;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #454545;
+  border-top-color: #f5f5f5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

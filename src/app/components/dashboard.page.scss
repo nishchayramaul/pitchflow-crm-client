@@ -1,0 +1,83 @@
+.dashboard-shell {
+  min-height: 100dvh;
+  background: #121212;
+  padding: 1.5rem;
+  color: #f4f4f5;
+}
+
+.dashboard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 auto 1.5rem;
+  max-width: 960px;
+}
+
+.dashboard-nav h1 {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.link-pill {
+  border: 1px solid #383838;
+  background: #1b1b1b;
+  color: #dfdfdf;
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
+
+.link-pill:hover {
+  border-color: #595959;
+}
+
+.signout-btn {
+  border: 1px solid #383838;
+  background: transparent;
+  color: #dfdfdf;
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+}
+
+.dashboard-card {
+  max-width: 960px;
+  margin: 0 auto;
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 18px;
+  padding: 1.8rem;
+}
+
+.label {
+  margin: 0;
+  color: #8f8f8f;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+h2 {
+  margin: 0.4rem 0 0.8rem;
+}
+
+.subtext {
+  margin: 0;
+  color: #adadad;
+}
+
+.success {
+  margin-top: 0.9rem;
+  color: #30d66a;
+}
+
+.error {
+  margin: 0;
+  color: #ff5b7d;
+}
