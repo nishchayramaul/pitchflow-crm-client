@@ -1,22 +1,29 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { from, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AuthTokenService } from '../services/auth-token.service';
+import { AuthSessionService } from '../services/auth-session.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const tokenService = inject(AuthTokenService);
-  const token = tokenService.get();
+  const authSessionService = inject(AuthSessionService);
   const isApiRequest = req.url.startsWith(environment.apiBaseUrl);
 
-  if (!token || !isApiRequest) {
+  if (!isApiRequest) {
     return next(req);
   }
 
-  return next(
-    req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
+  return from(authSessionService.getAccessToken()).pipe(
+    switchMap((token) => {
+      if (!token) {
+        return next(req);
       }
+      return next(
+        req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+      );
     })
   );
 };

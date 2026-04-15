@@ -1,24 +1,26 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AuthChangeEvent } from '@supabase/supabase-js';
+import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { Subject, firstValueFrom, takeUntil } from 'rxjs';
-import { AuthTokenService } from '../services/auth-token.service';
-import { OnboardingApiService } from '../services/onboarding-api.service';
-import { SupabaseService } from '../services/supabase.service';
+import { UiLoaderComponent } from './ui-loader.component';
+import { LoaderService } from '../services/loader.service';
+import { ProfileStateFacade } from '../services/profile-state.facade';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [CommonModule, RouterOutlet, UiLoaderComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject<void>();
+  private authStateSubscription?: { unsubscribe: () => void };
+  private lastSyncedToken = '';
 
   constructor(
-    private readonly onboardingApi: OnboardingApiService,
-    private readonly authTokenService: AuthTokenService,
-    private readonly supabaseService: SupabaseService,
-    private readonly router: Router
+    private readonly profileStateFacade: ProfileStateFacade,
+    private readonly router: Router,
+    private readonly ngZone: NgZone,
+    readonly loaderService: LoaderService
   ) {}
 
   ngOnInit(): void {
@@ -26,48 +28,42 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.authStateSubscription?.unsubscribe();
   }
 
   private async initializeAuthSession(): Promise<void> {
-    const { data, error } = await this.supabaseService.client.auth.getSession();
-    if (error) {
-      this.authTokenService.clear();
-      await this.router.navigateByUrl('/onboarding');
+    const session = await this.loaderService.trackPromise(
+      this.profileStateFacade.getSession(),
+      'Restoring session...'
+    );
+    await this.ngZone.run(() => this.syncSessionToken(session?.access_token ?? null, 'INITIAL_SESSION'));
+
+    const authStateChange = this.profileStateFacade.onAuthStateChange((event, session) => {
+      void this.ngZone.run(() => this.syncSessionToken(session?.access_token ?? null, event));
+    });
+    this.authStateSubscription = authStateChange;
+  }
+
+  private async syncSessionToken(accessToken: string | null, event: AuthChangeEvent): Promise<void> {
+    // Supabase emits INITIAL_SESSION on listener registration; skip duplicate work.
+    if (event === 'INITIAL_SESSION' && this.lastSyncedToken === (accessToken ?? '')) {
       return;
     }
 
-    await this.syncSessionToken(data.session?.access_token ?? null);
-
-    this.supabaseService.client.auth
-      .onAuthStateChange((_event, session) => {
-        void this.syncSessionToken(session?.access_token ?? null);
-      })
-      .data.subscription;
-  }
-
-  private async syncSessionToken(accessToken: string | null): Promise<void> {
     if (accessToken) {
-      this.authTokenService.save(accessToken);
+      this.lastSyncedToken = accessToken;
       await this.routeByProfile();
       return;
     }
 
-    this.authTokenService.clear();
-    await this.router.navigateByUrl('/onboarding');
+    this.lastSyncedToken = '';
+    this.profileStateFacade.clearProfileLoadStateCache();
+    await this.ngZone.run(() => this.router.navigateByUrl('/onboarding'));
   }
 
   private async routeByProfile(): Promise<void> {
-    try {
-      const profile = await firstValueFrom(this.onboardingApi.getMe().pipe(takeUntil(this.destroy$)));
-      if (profile.display_name && profile.slug) {
-        await this.router.navigateByUrl('/dashboard');
-        return;
-      }
-      await this.router.navigateByUrl('/onboarding');
-    } catch {
-      await this.router.navigateByUrl('/onboarding');
-    }
+    const profileState = await this.profileStateFacade.getProfileLoadState(true);
+    const targetRoute = profileState.status === 'complete' ? '/dashboard' : '/onboarding';
+    await this.ngZone.run(() => this.router.navigateByUrl(targetRoute));
   }
 }

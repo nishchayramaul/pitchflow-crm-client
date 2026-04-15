@@ -1,1 +1,6 @@
 <router-outlet />
+<app-ui-loader
+  *ngIf="loaderService.isVisible()"
+  [message]="loaderService.message()"
+  [fullscreen]="true"
+></app-ui-loader>

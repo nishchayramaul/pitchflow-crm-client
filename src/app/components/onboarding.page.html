@@ -29,8 +29,14 @@
             Work Email
             <input type="email" formControlName="email" placeholder="name@yourdomain.com" />
           </label>
-          <button class="primary-btn" type="submit" [disabled]="magicLinkLoading">
-            {{ magicLinkLoading ? 'Sending link...' : 'Send Magic Link' }}
+          <button class="primary-btn" type="submit" [disabled]="magicLinkLoading || magicLinkCooldownSeconds > 0">
+            {{
+              magicLinkLoading
+                ? 'Sending link...'
+                : magicLinkCooldownSeconds > 0
+                  ? 'Retry in ' + magicLinkCooldownSeconds + 's'
+                  : 'Send Magic Link'
+            }}
           </button>
         </form>
 
