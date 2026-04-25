@@ -1,0 +1,107 @@
+<div class="dashboard-layout">
+  <app-sidenav></app-sidenav>
+
+  <main class="dashboard-shell">
+    <header class="dashboard-nav">
+      <h1>Leads Management</h1>
+    </header>
+
+    <section class="dashboard-card table-card">
+
+      <!-- Status Tabs -->
+      <div class="status-tabs">
+        <button
+          *ngFor="let tab of statusTabs"
+          class="tab-btn"
+          [class.active]="activeTab === tab"
+          (click)="setTab(tab)"
+        >
+          {{ tab }}
+          <span class="tab-count">{{ tabCount(tab) }}</span>
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="leads-table">
+          <thead>
+            <tr cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="dropColumn($event)">
+              <th *ngFor="let field of formSchema" cdkDrag class="draggable-th">
+                <div class="th-content" cdkDragHandle>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="drag-handle">
+                    <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+                  </svg>
+                  {{ field.label }}
+                </div>
+              </th>
+              <th class="status-col-header">Status</th>
+            </tr>
+            <tr class="filter-row">
+              <th *ngFor="let field of formSchema">
+                <input type="text" [attr.aria-label]="'Filter by ' + field.label" placeholder="Filter..." [(ngModel)]="filters[field.id]" (ngModelChange)="onFilterChange()" class="filter-input">
+              </th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngIf="isLoading">
+              <tr class="skeleton-row" *ngFor="let row of skeletonRows">
+                <td *ngFor="let field of formSchema"><span class="skeleton-cell"></span></td>
+                <td><span class="skeleton-cell skeleton-badge"></span></td>
+              </tr>
+            </ng-container>
+            <ng-container *ngIf="!isLoading">
+              <tr
+                *ngFor="let lead of paginatedLeads"
+                class="data-row"
+                (click)="selectLead(lead)"
+              >
+                <td *ngFor="let field of formSchema">{{ lead.custom_responses[field.id] || '-' }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="lead.status">{{ lead.status }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="filteredLeads.length === 0">
+                <td [attr.colspan]="formSchema.length + 1" class="empty-cell">No leads found.</td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-footer">
+        <span class="page-info">{{ showingText }}</span>
+        <div class="page-controls">
+          <button (click)="prevPage()" [disabled]="currentPage === 1" class="btn-page">Prev</button>
+          <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" class="btn-page">Next</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Lead Detail Side Panel -->
+  <div class="panel-backdrop" *ngIf="selectedLead" (click)="closeLead()"></div>
+  <aside class="lead-panel" [class.open]="!!selectedLead">
+    <div class="panel-top">
+      <h2>Lead Details</h2>
+      <button class="panel-close" (click)="closeLead()" aria-label="Close panel">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="panel-body" *ngIf="selectedLead">
+      <div class="panel-status-row">
+        <span class="status-badge" [ngClass]="selectedLead.status">{{ selectedLead.status }}</span>
+      </div>
+      <div class="panel-field" *ngFor="let field of formSchema">
+        <span class="panel-label">{{ field.label }}</span>
+        <span class="panel-value">{{ selectedLead.custom_responses[field.id] || '—' }}</span>
+      </div>
+      <div class="panel-field" *ngIf="selectedLead.budget">
+        <span class="panel-label">Budget</span>
+        <span class="panel-value">${{ selectedLead.budget | number:'1.0-0' }}</span>
+      </div>
+    </div>
+  </aside>
+</div>

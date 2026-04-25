@@ -3,12 +3,13 @@ import { AuthChangeEvent } from '@supabase/supabase-js';
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { UiLoaderComponent } from './ui-loader.component';
+import { ToastComponent } from './toast/toast.component';
 import { LoaderService } from '../services/loader.service';
 import { ProfileStateFacade } from '../services/profile-state.facade';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, UiLoaderComponent],
+  imports: [CommonModule, RouterOutlet, UiLoaderComponent, ToastComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -62,6 +63,12 @@ export class App implements OnInit, OnDestroy {
   }
 
   private async routeByProfile(): Promise<void> {
+    // Don't redirect if user is on public pitch form
+    const currentUrl = this.router.url;
+    if (currentUrl.startsWith('/pitch/')) {
+      return;
+    }
+
     const profileState = await this.profileStateFacade.getProfileLoadState(true);
     const targetRoute = profileState.status === 'complete' ? '/dashboard' : '/onboarding';
     await this.ngZone.run(() => this.router.navigateByUrl(targetRoute));

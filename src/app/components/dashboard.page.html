@@ -1,29 +1,42 @@
-<main class="dashboard-shell">
-  <header class="dashboard-nav">
-    <h1>Dashboard</h1>
-    <div class="actions">
-      <button
-        class="link-pill"
-        [title]="copied ? 'Copied!' : 'Copy link'"
-        [disabled]="!profileUrl"
-        (click)="copyLink()"
-      >
-        {{ profileUrl || 'No link yet' }}
-      </button>
-      <button class="signout-btn" type="button" (click)="signOut()">Sign out</button>
-    </div>
-  </header>
+<div class="dashboard-layout">
+  <app-sidenav></app-sidenav>
 
-  <section class="dashboard-card">
-    @if (loadError) {
-      <p class="error">{{ loadError }}</p>
-    } @else {
-      <p class="label">Welcome</p>
-      <h2>{{ displayName }}</h2>
-      <p class="subtext">Your public creator link is ready to share in bio.</p>
-      @if (copied) {
-        <p class="success">Link copied to clipboard!</p>
+  <main class="dashboard-shell">
+    <header class="dashboard-nav">
+      <h1>Dashboard</h1>
+      <div class="actions">
+        <button
+          class="link-pill"
+          [title]="copied ? 'Copied!' : 'Copy link'"
+          [disabled]="!profileUrl"
+          (click)="copyLink()"
+        >
+          {{ profileUrl || 'No link yet' }}
+        </button>
+      </div>
+    </header>
+
+    <section class="dashboard-card">
+      @if (loadError) {
+        <p class="error">{{ loadError }}</p>
+      } @else {
+        <p class="label">Welcome</p>
+        <h2>{{ displayName }}</h2>
+        <p class="subtext">Your public creator link is ready to share in bio.</p>
+        @if (copied) {
+          <p class="success">Link copied to clipboard!</p>
+        }
       }
-    }
-  </section>
-</main>
+    </section>
+
+    <!-- KPI Strip -->
+    <div class="kpi-strip">
+      <div class="kpi-card" *ngFor="let stat of stats">
+        <span class="kpi-value">{{ stat.value }}</span>
+        <span class="kpi-label">{{ stat.label }}</span>
+        <span class="kpi-sub">{{ stat.sub }}</span>
+      </div>
+    </div>
+
+  </main>
+</div>

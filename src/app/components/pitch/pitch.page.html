@@ -1,0 +1,87 @@
+<div class="pitch-container">
+  <div class="pitch-card">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading {{ creatorSlug }}'s form...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-state">
+      <h2>Oops!</h2>
+      <p>{{ error }}</p>
+      <button class="btn-secondary" (click)="router.navigate(['/'])">Go Back</button>
+    </div>
+
+    <!-- Form Content -->
+    <div *ngIf="!loading && !error">
+      <div class="header-section">
+        <h2>Pitch {{ creatorName }}</h2>
+        <p class="subtitle">Fill out the form below to propose a collaboration.</p>
+      </div>
+
+      <form [formGroup]="pitchForm" (ngSubmit)="submitPitch()" class="dynamic-form">
+      
+      <div *ngFor="let field of formSchema" class="form-field-wrapper">
+        <label>
+          {{ field.label }} 
+          <span class="required" *ngIf="field.required">*</span>
+        </label>
+        
+        <ng-container [ngSwitch]="field.type">
+          
+          <!-- Text Input -->
+          <input *ngSwitchCase="'text'" 
+                 type="text" 
+                 [formControlName]="field.id" 
+                 [placeholder]="field.placeholder || ''"
+                 [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+                 
+          <!-- Textarea -->
+          <textarea *ngSwitchCase="'textarea'" 
+                    [formControlName]="field.id" 
+                    [placeholder]="field.placeholder || ''"
+                    rows="4"
+                    [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched"></textarea>
+
+          <!-- Number -->
+          <input *ngSwitchCase="'number'" 
+                 type="number" 
+                 [formControlName]="field.id" 
+                 [placeholder]="field.placeholder || ''"
+                 [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+
+          <!-- Select -->
+          <select *ngSwitchCase="'select'" [formControlName]="field.id"
+                  [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+            <option value="" disabled selected>Select an option...</option>
+            <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
+          </select>
+          
+          <!-- Radio (as a group) -->
+          <div *ngSwitchCase="'radio'" class="radio-group">
+            <label *ngFor="let opt of field.options" class="radio-label">
+              <input type="radio" [value]="opt" [formControlName]="field.id">
+              {{ opt }}
+            </label>
+          </div>
+
+          <!-- File -->
+          <input *ngSwitchCase="'file'" 
+                 type="file" 
+                 (change)="onFileSelected($event, field.id)"
+                 [accept]="field.allowedExtensions?.join(',') || '*/*'"
+                 class="file-input">
+                 
+        </ng-container>
+
+        <span class="error-msg" *ngIf="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+          This field is required.
+        </span>
+      </div>
+      
+        <button type="submit" class="btn-submit" [disabled]="pitchForm.invalid">Send Pitch</button>
+      </form>
+    </div>
+  </div>
+</div>

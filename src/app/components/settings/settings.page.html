@@ -1,0 +1,89 @@
+<div class="dashboard-layout">
+  <app-sidenav></app-sidenav>
+
+  <main class="dashboard-shell">
+    <header class="dashboard-nav">
+      <h1>Settings & Form Builder</h1>
+    </header>
+
+    <section class="dashboard-card form-builder-card">
+      <p *ngIf="loadError" class="error" style="margin:0 0 1rem">{{ loadError }}</p>
+
+      <div class="builder-container" [class.gated]="tier === 'free'">
+        
+        <div class="add-field-panel">
+          <h3>Add New Field</h3>
+          <form [formGroup]="newFieldForm" (ngSubmit)="addField()" class="add-form">
+            <div class="input-group">
+              <label>Field Type</label>
+              <select formControlName="type">
+                <option *ngFor="let t of fieldTypes" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+            
+            <div class="input-group">
+              <label>Label</label>
+              <input type="text" formControlName="label" placeholder="e.g., Company Name" />
+            </div>
+
+            <div class="input-group">
+              <label>Placeholder</label>
+              <input type="text" formControlName="placeholder" placeholder="Optional" />
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="req" formControlName="required" />
+              <label for="req">Required</label>
+            </div>
+
+            <button type="submit" [disabled]="newFieldForm.invalid" class="btn-primary">Add Field</button>
+          </form>
+        </div>
+
+        <div class="schema-preview-panel">
+          <div class="panel-header">
+            <h3>Your Custom Pitch Form</h3>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <span *ngIf="saveSuccess" style="font-size:0.875rem;color:var(--success)">Saved</span>
+              <span *ngIf="saveError" style="font-size:0.875rem;color:var(--error)">{{ saveError }}</span>
+              <button class="btn-secondary" (click)="saveSchema()" [disabled]="saveLoading">
+                {{ saveLoading ? 'Saving...' : 'Save Form' }}
+              </button>
+            </div>
+          </div>
+
+          <div cdkDropList class="field-list" (cdkDropListDropped)="drop($event)">
+            <div *ngFor="let field of formSchema; let i = index" class="field-box" cdkDrag>
+              <div class="field-drag-handle" cdkDragHandle>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
+                </svg>
+              </div>
+              <div class="field-info">
+                <strong>{{ field.label }}</strong> <span class="badge">{{ field.type }}</span>
+                <span class="required-asterisk" *ngIf="field.required">*</span>
+              </div>
+              <button class="btn-icon" (click)="deleteField(i)">✕</button>
+            </div>
+          </div>
+          
+          <div *ngIf="formSchema.length === 0" class="empty-state">
+            <p>No fields added yet. Add a field from the left panel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="upgrade-overlay" *ngIf="tier === 'free'">
+        <div class="overlay-content">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor" class="lock-icon">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path>
+          </svg>
+          <h2>Custom Form Fields</h2>
+          <p>Upgrade to Pro to customize the fields on your pitch page and collect exactly the information you need from brands.</p>
+          <button class="btn-primary upgrade-btn" (click)="upgradeToPro()">Upgrade to Pro</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>

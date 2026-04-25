@@ -3,10 +3,17 @@ import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthSessionService } from '../services/auth-session.service';
 import { ProfileStateFacade } from '../services/profile-state.facade';
+import { SidenavComponent } from './sidenav/sidenav.component';
+
+interface KpiStat {
+  label: string;
+  value: string;
+  sub: string;
+}
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [CommonModule],
+  imports: [CommonModule, SidenavComponent],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss'
 })
@@ -15,6 +22,13 @@ export class DashboardPageComponent implements OnInit {
   profileUrl = '';
   loadError = '';
   copied = false;
+
+  stats: KpiStat[] = [
+    { label: 'Total Leads',     value: '6',       sub: 'All time'          },
+    { label: 'Pending Review',  value: '2',       sub: 'Awaiting response' },
+    { label: 'Deals Closed',    value: '1',       sub: 'Completed'         },
+    { label: 'Pipeline Value',  value: '$35,000', sub: 'Active deals'      },
+  ];
 
   constructor(
     private readonly authSessionService: AuthSessionService,
@@ -28,21 +42,11 @@ export class DashboardPageComponent implements OnInit {
     void this.loadProfile();
   }
 
-  async signOut(): Promise<void> {
-    await this.authSessionService.signOut();
-    this.profileStateFacade.clearProfileLoadStateCache();
-    await this.router.navigateByUrl('/onboarding');
-  }
-
   async copyLink(): Promise<void> {
-    if (!this.profileUrl) {
-      return;
-    }
+    if (!this.profileUrl) return;
     await navigator.clipboard.writeText(this.profileUrl);
     this.copied = true;
-    setTimeout(() => {
-      this.copied = false;
-    }, 1200);
+    setTimeout(() => { this.copied = false; }, 1200);
   }
 
   private async loadProfile(): Promise<void> {

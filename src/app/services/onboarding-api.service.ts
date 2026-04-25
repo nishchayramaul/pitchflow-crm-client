@@ -1,8 +1,15 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { SlugAvailabilityResponse, UpdateProfilePayload, UserProfileResponse } from '../models/api.models';
+import { SKIP_AUTH } from '../interceptors/auth.interceptor';
+import {
+  FormField,
+  PublicPitchFormResponse,
+  SlugAvailabilityResponse,
+  UpdateProfilePayload,
+  UserProfileResponse,
+} from '../models/api.models';
 
 @Injectable({
   providedIn: 'root'
@@ -22,5 +29,18 @@ export class OnboardingApiService {
 
   updateProfile(payload: UpdateProfilePayload): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${environment.apiBaseUrl}/api/users/profile`, payload);
+  }
+
+  getPitchForm(slug: string): Observable<PublicPitchFormResponse> {
+    return this.http.get<PublicPitchFormResponse>(
+      `${environment.apiBaseUrl}/api/pitch/${encodeURIComponent(slug)}`
+    );
+  }
+
+  updateFormSchema(formSchema: FormField[]): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(
+      `${environment.apiBaseUrl}/api/users/form-schema`,
+      { form_schema: formSchema }
+    );
   }
 }
