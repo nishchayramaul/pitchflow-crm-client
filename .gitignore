@@ -58,3 +58,5 @@ src/environments/environment.*.local.ts
 *.pem
 *.key
 *.p12
+# Added by code-review-graph
+.code-review-graph/
