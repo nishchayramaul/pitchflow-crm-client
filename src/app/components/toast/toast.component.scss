@@ -1,7 +1,7 @@
 /* ── Container ───────────────────────────────────────── */
 .toast-container {
   position: fixed;
-  bottom: 1.75rem;
+  top: 1.75rem;
   right: 1.75rem;
   display: flex;
   flex-direction: column;
@@ -110,7 +110,7 @@
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translateY(-10px) scale(0.97);
   }
   to {
     opacity: 1;

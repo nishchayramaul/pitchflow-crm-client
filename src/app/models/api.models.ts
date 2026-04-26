@@ -8,16 +8,17 @@ export interface UpdateProfilePayload {
   avatar_url: string | null;
 }
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'file';
+export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'file' | 'email';
 
 export interface FormField {
-  id: string; // Unique ID (e.g., generated via uuid)
+  id: string;
   type: FieldType;
   label: string;
   required: boolean;
   placeholder?: string;
-  options?: string[]; // Only used for select/radio/checkbox
-  allowedExtensions?: string[]; // Only used for file uploads
+  options?: string[];        // select / radio / checkbox
+  multiselect?: boolean;     // checkbox only — undefined/true = multi, false = single
+  allowedExtensions?: string[];
 }
 
 export interface UserProfileResponse {

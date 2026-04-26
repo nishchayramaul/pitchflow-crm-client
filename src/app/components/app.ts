@@ -63,9 +63,9 @@ export class App implements OnInit, OnDestroy {
   }
 
   private async routeByProfile(): Promise<void> {
-    // Don't redirect if user is on public pitch form
-    const currentUrl = this.router.url;
-    if (currentUrl.startsWith('/pitch/')) {
+    // Use window.location.pathname — router.url is '/' on initial load before route resolution
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/pitch/')) {
       return;
     }
 

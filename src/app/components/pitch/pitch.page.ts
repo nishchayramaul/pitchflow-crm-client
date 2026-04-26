@@ -55,10 +55,47 @@ export class PitchPageComponent implements OnInit {
 
   buildForm() {
     const group: Record<string, any> = {};
+
     this.formSchema.forEach(field => {
-      group[field.id] = ['', field.required ? [Validators.required] : []];
+      const req = field.required;
+
+      switch (field.type) {
+        case 'checkbox': {
+          const isMulti = field.multiselect !== false;
+          // Multi: store string[]. Single: store string ''.
+          // Validators.required on [] fails (length === 0), on '' fails — both correct.
+          group[field.id] = [isMulti ? [] : '', req ? [Validators.required] : []];
+          break;
+        }
+        case 'email': {
+          const validators = req
+            ? [Validators.required, Validators.email]
+            : [Validators.email];
+          group[field.id] = ['', validators];
+          break;
+        }
+        default:
+          group[field.id] = ['', req ? [Validators.required] : []];
+      }
     });
+
     this.pitchForm = this.fb.group(group);
+  }
+
+  // Multi-select checkbox: toggle option in/out of string[]
+  onCheckboxChange(fieldId: string, option: string, checked: boolean) {
+    const current: string[] = this.pitchForm.get(fieldId)?.value ?? [];
+    const next = checked
+      ? [...current, option]
+      : current.filter(v => v !== option);
+    this.pitchForm.get(fieldId)?.setValue(next);
+    this.pitchForm.get(fieldId)?.markAsTouched();
+  }
+
+  // Single-select checkbox: store one value or clear
+  onSingleCheckboxChange(fieldId: string, option: string, checked: boolean) {
+    this.pitchForm.get(fieldId)?.setValue(checked ? option : '');
+    this.pitchForm.get(fieldId)?.markAsTouched();
   }
 
   onFileSelected(event: Event, fieldId: string) {

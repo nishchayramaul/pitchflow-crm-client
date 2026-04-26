@@ -68,6 +68,7 @@ label {
 }
 
 input[type="text"],
+input[type="email"],
 input[type="number"],
 textarea,
 select {
@@ -78,6 +79,7 @@ select {
   border-radius: 10px;
   font-size: 1rem;
   font-weight: 400;
+  font-family: inherit;
   outline: none;
   width: 100%;
   box-sizing: border-box;
@@ -95,6 +97,7 @@ select {
 }
 
 input:focus,
+input[type="email"]:focus,
 textarea:focus,
 select:focus {
   border-color: #0071e3;
@@ -126,10 +129,18 @@ textarea {
 
 select {
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  // Custom chevron — matches #6e6e73 (muted text color)
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  padding-right: 2.5rem;
 
   option {
     background: #ffffff;
     color: #1d1d1f;
+    font-family: inherit;
   }
 }
 
@@ -161,6 +172,38 @@ select {
     width: 16px;
     height: 16px;
     accent-color: #0071e3;
+  }
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #1d1d1f;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #f5f5f7;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: #d2d2d7;
+  }
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #0071e3;
+    flex-shrink: 0;
   }
 }
 

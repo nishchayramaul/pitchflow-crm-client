@@ -21,65 +21,104 @@
       </div>
 
       <form [formGroup]="pitchForm" (ngSubmit)="submitPitch()" class="dynamic-form">
-      
-      <div *ngFor="let field of formSchema" class="form-field-wrapper">
-        <label>
-          {{ field.label }} 
-          <span class="required" *ngIf="field.required">*</span>
-        </label>
-        
-        <ng-container [ngSwitch]="field.type">
-          
-          <!-- Text Input -->
-          <input *ngSwitchCase="'text'" 
-                 type="text" 
-                 [formControlName]="field.id" 
-                 [placeholder]="field.placeholder || ''"
-                 [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
-                 
-          <!-- Textarea -->
-          <textarea *ngSwitchCase="'textarea'" 
-                    [formControlName]="field.id" 
-                    [placeholder]="field.placeholder || ''"
-                    rows="4"
-                    [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched"></textarea>
 
-          <!-- Number -->
-          <input *ngSwitchCase="'number'" 
-                 type="number" 
-                 [formControlName]="field.id" 
-                 [placeholder]="field.placeholder || ''"
-                 [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+        <div *ngFor="let field of formSchema" class="form-field-wrapper">
+          <label>
+            {{ field.label }}
+            <span class="required" *ngIf="field.required">*</span>
+          </label>
 
-          <!-- Select -->
-          <select *ngSwitchCase="'select'" [formControlName]="field.id"
-                  [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
-            <option value="" disabled selected>Select an option...</option>
-            <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
-          </select>
-          
-          <!-- Radio (as a group) -->
-          <div *ngSwitchCase="'radio'" class="radio-group">
-            <label *ngFor="let opt of field.options" class="radio-label">
-              <input type="radio" [value]="opt" [formControlName]="field.id">
-              {{ opt }}
-            </label>
-          </div>
+          <ng-container [ngSwitch]="field.type">
 
-          <!-- File -->
-          <input *ngSwitchCase="'file'" 
-                 type="file" 
-                 (change)="onFileSelected($event, field.id)"
-                 [accept]="field.allowedExtensions?.join(',') || '*/*'"
-                 class="file-input">
-                 
-        </ng-container>
+            <!-- Text -->
+            <input *ngSwitchCase="'text'"
+                   type="text"
+                   [formControlName]="field.id"
+                   [placeholder]="field.placeholder || ''"
+                   [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
 
-        <span class="error-msg" *ngIf="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
-          This field is required.
-        </span>
-      </div>
-      
+            <!-- Email -->
+            <input *ngSwitchCase="'email'"
+                   type="email"
+                   [formControlName]="field.id"
+                   [placeholder]="field.placeholder || 'email@example.com'"
+                   [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+
+            <!-- Textarea -->
+            <textarea *ngSwitchCase="'textarea'"
+                      [formControlName]="field.id"
+                      [placeholder]="field.placeholder || ''"
+                      rows="4"
+                      [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched"></textarea>
+
+            <!-- Number -->
+            <input *ngSwitchCase="'number'"
+                   type="number"
+                   [formControlName]="field.id"
+                   [placeholder]="field.placeholder || ''"
+                   [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+
+            <!-- Select -->
+            <select *ngSwitchCase="'select'" [formControlName]="field.id"
+                    [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+              <option value="" disabled selected>Select an option...</option>
+              <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
+            </select>
+
+            <!-- Radio -->
+            <div *ngSwitchCase="'radio'" class="radio-group">
+              <label *ngFor="let opt of field.options" class="radio-label">
+                <input type="radio" [value]="opt" [formControlName]="field.id">
+                {{ opt }}
+              </label>
+            </div>
+
+            <!-- Checkbox — multiselect (default) -->
+            <div *ngSwitchCase="'checkbox'" class="checkbox-group">
+              <ng-container *ngIf="field.multiselect !== false; else singleCheckbox">
+                <label *ngFor="let opt of field.options" class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    [value]="opt"
+                    (change)="onCheckboxChange(field.id, opt, $any($event.target).checked)"
+                    [checked]="pitchForm.get(field.id)?.value?.includes(opt)">
+                  {{ opt }}
+                </label>
+              </ng-container>
+
+              <!-- Checkbox — single select -->
+              <ng-template #singleCheckbox>
+                <label *ngFor="let opt of field.options" class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    [value]="opt"
+                    (change)="onSingleCheckboxChange(field.id, opt, $any($event.target).checked)"
+                    [checked]="pitchForm.get(field.id)?.value === opt">
+                  {{ opt }}
+                </label>
+              </ng-template>
+            </div>
+
+            <!-- File -->
+            <input *ngSwitchCase="'file'"
+                   type="file"
+                   (change)="onFileSelected($event, field.id)"
+                   [accept]="field.allowedExtensions?.join(',') || '*/*'"
+                   class="file-input">
+
+          </ng-container>
+
+          <!-- Error messages — field-type-aware -->
+          <ng-container *ngIf="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+            <span class="error-msg" *ngIf="pitchForm.get(field.id)?.hasError('required')">
+              This field is required.
+            </span>
+            <span class="error-msg" *ngIf="pitchForm.get(field.id)?.hasError('email')">
+              Enter a valid email address.
+            </span>
+          </ng-container>
+        </div>
+
         <button type="submit" class="btn-submit" [disabled]="pitchForm.invalid">Send Pitch</button>
       </form>
     </div>
