@@ -1,107 +1,337 @@
-<div class="dashboard-layout">
+<div class="pf-app-shell">
   <app-sidenav></app-sidenav>
 
-  <main class="dashboard-shell">
-    <header class="dashboard-nav">
-      <h1>Leads Management</h1>
-    </header>
+  <main class="pf-main pf-fade-up">
 
-    <section class="dashboard-card table-card">
+    <!-- Topbar -->
+    <div class="pf-topbar">
+      <div class="pf-topbar__text">
+        <h1 class="pf-topbar__title">Leads</h1>
+        <p class="pf-topbar__sub">{{ leads.length }} total · {{ pendingCount }} need a response</p>
+      </div>
+      <div class="pf-topbar__actions">
+        <button class="pf-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M6 12h12M10 18h4"/>
+          </svg>
+          Filter
+        </button>
+        <button class="pf-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+          </svg>
+          Export
+        </button>
+        <button class="pf-btn pf-btn--primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          New lead
+        </button>
+      </div>
+    </div>
 
-      <!-- Status Tabs -->
-      <div class="status-tabs">
-        <button
-          *ngFor="let tab of statusTabs"
-          class="tab-btn"
-          [class.active]="activeTab === tab"
-          (click)="setTab(tab)"
-        >
+    <!-- Filter bar -->
+    <div class="pf-filter-bar">
+      <!-- Status tabs -->
+      <div class="pf-tabs">
+        <button *ngFor="let tab of statusTabs"
+                class="pf-tab"
+                [class.active]="activeTab === tab"
+                (click)="setTab(tab)">
           {{ tab }}
-          <span class="tab-count">{{ tabCount(tab) }}</span>
+          <span class="pf-tab__count">{{ tabCount(tab) }}</span>
         </button>
       </div>
 
-      <div class="table-container">
-        <table class="leads-table">
-          <thead>
-            <tr cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="dropColumn($event)">
-              <th *ngFor="let field of formSchema" cdkDrag class="draggable-th">
-                <div class="th-content" cdkDragHandle>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="drag-handle">
-                    <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
-                  </svg>
-                  {{ field.label }}
-                </div>
-              </th>
-              <th class="status-col-header">Status</th>
-            </tr>
-            <tr class="filter-row">
-              <th *ngFor="let field of formSchema">
-                <input type="text" [attr.aria-label]="'Filter by ' + field.label" placeholder="Filter..." [(ngModel)]="filters[field.id]" (ngModelChange)="onFilterChange()" class="filter-input">
-              </th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <ng-container *ngIf="isLoading">
-              <tr class="skeleton-row" *ngFor="let row of skeletonRows">
-                <td *ngFor="let field of formSchema"><span class="skeleton-cell"></span></td>
-                <td><span class="skeleton-cell skeleton-badge"></span></td>
-              </tr>
-            </ng-container>
-            <ng-container *ngIf="!isLoading">
-              <tr
-                *ngFor="let lead of paginatedLeads"
-                class="data-row"
-                (click)="selectLead(lead)"
-              >
-                <td *ngFor="let field of formSchema">{{ lead.custom_responses[field.id] || '-' }}</td>
-                <td>
-                  <span class="status-badge" [ngClass]="lead.status">{{ lead.status }}</span>
-                </td>
-              </tr>
-              <tr *ngIf="filteredLeads.length === 0">
-                <td [attr.colspan]="formSchema.length + 1" class="empty-cell">No leads found.</td>
-              </tr>
-            </ng-container>
-          </tbody>
-        </table>
+      <!-- Search -->
+      <div class="pf-search-wrap">
+        <svg class="pf-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input class="pf-input pf-search-input"
+               placeholder="Search brands…"
+               [(ngModel)]="searchQuery"
+               (ngModelChange)="onSearchChange()">
       </div>
+    </div>
 
-      <div class="pagination-footer">
-        <span class="page-info">{{ showingText }}</span>
-        <div class="page-controls">
-          <button (click)="prevPage()" [disabled]="currentPage === 1" class="btn-page">Prev</button>
-          <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" class="btn-page">Next</button>
+    <!-- Bulk action bar -->
+    <div class="pf-bulk-bar pf-fade" *ngIf="selectedIds.size > 0">
+      <span class="pf-bulk-bar__count">{{ selectedIds.size }} selected</span>
+      <div class="pf-bulk-bar__divider"></div>
+      <button class="pf-bulk-btn" (click)="bulkSetStatus('negotiating')">Move to negotiating</button>
+      <button class="pf-bulk-btn" (click)="bulkSetStatus('completed')">Mark completed</button>
+      <button class="pf-bulk-btn" (click)="bulkSetStatus('rejected')">Reject</button>
+      <button class="pf-bulk-btn pf-bulk-btn--icon">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+        </svg>
+        Export
+      </button>
+      <button class="pf-bulk-btn pf-bulk-btn--right" (click)="clearSelection()">Clear</button>
+    </div>
+
+    <!-- Table / Empty state -->
+    <div class="pf-table-wrap pf-scroll">
+
+      <!-- Empty state -->
+      <div class="pf-empty pf-dotgrid" *ngIf="!isLoading && filteredLeads.length === 0">
+        <div class="pf-empty__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+            <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>
+          </svg>
+        </div>
+        <h3 class="pf-empty__title">
+          {{ activeTab === 'All' ? 'No leads yet' : 'No ' + activeTab.toLowerCase() + ' leads' }}
+        </h3>
+        <p class="pf-empty__body">
+          {{ activeTab === 'All' ? 'Share your pitch link to start receiving collaboration requests.' : 'No leads with this status yet.' }}
+        </p>
+        <div class="pf-empty__actions" *ngIf="activeTab === 'All'">
+          <button class="pf-btn pf-btn--primary">Copy pitch link</button>
+          <button class="pf-btn">Preview form</button>
         </div>
       </div>
 
-    </section>
+      <!-- Table -->
+      <div class="pf-table pf-card" *ngIf="filteredLeads.length > 0 || isLoading">
+
+        <!-- Header -->
+        <div class="pf-table__header">
+          <div class="pf-table__cell pf-table__cell--check">
+            <label class="pf-checkbox" [class.indeterminate]="isIndeterminate" [class.checked]="isAllSelected">
+              <input type="checkbox"
+                     [checked]="isAllSelected"
+                     [indeterminate]="isIndeterminate"
+                     (change)="toggleAll()">
+              <span class="pf-checkbox__box"></span>
+            </label>
+          </div>
+          <div class="pf-table__cell pf-table__cell--brand">Brand</div>
+          <div class="pf-table__cell pf-table__cell--budget">Budget</div>
+          <div class="pf-table__cell pf-table__cell--status">Status</div>
+          <div class="pf-table__cell pf-table__cell--date">Received</div>
+          <div class="pf-table__cell pf-table__cell--chevron"></div>
+        </div>
+
+        <!-- Skeleton rows -->
+        <ng-container *ngIf="isLoading">
+          <div class="pf-table__row pf-table__row--skeleton" *ngFor="let s of skeletonRows">
+            <div class="pf-table__cell pf-table__cell--check"><span class="pf-skel pf-skel--sm"></span></div>
+            <div class="pf-table__cell pf-table__cell--brand">
+              <span class="pf-skel pf-skel--tile"></span>
+              <div><span class="pf-skel pf-skel--text"></span><span class="pf-skel pf-skel--text-sm"></span></div>
+            </div>
+            <div class="pf-table__cell"><span class="pf-skel pf-skel--text-sm"></span></div>
+            <div class="pf-table__cell"><span class="pf-skel pf-skel--pill"></span></div>
+            <div class="pf-table__cell"><span class="pf-skel pf-skel--text-sm"></span></div>
+            <div class="pf-table__cell"></div>
+          </div>
+        </ng-container>
+
+        <!-- Data rows -->
+        <ng-container *ngIf="!isLoading">
+          <div
+            *ngFor="let lead of paginatedLeads; let last = last"
+            class="pf-table__row"
+            [class.selected]="selectedIds.has(lead.id)"
+            [class.open]="openLeadId === lead.id"
+            [class.last]="last"
+            (click)="openLead(lead)">
+
+            <!-- Checkbox -->
+            <div class="pf-table__cell pf-table__cell--check" (click)="$event.stopPropagation()">
+              <label class="pf-checkbox" [class.checked]="selectedIds.has(lead.id)">
+                <input type="checkbox"
+                       [checked]="selectedIds.has(lead.id)"
+                       (change)="toggleSelect(lead.id)">
+                <span class="pf-checkbox__box"></span>
+              </label>
+            </div>
+
+            <!-- Brand -->
+            <div class="pf-table__cell pf-table__cell--brand">
+              <div class="pf-brand-tile" [style.background]="lead.tileColor">{{ lead.initial }}</div>
+              <div class="pf-brand-info">
+                <span class="pf-brand-name">{{ lead.custom_responses['brand_name'] || lead.brand_name || '—' }}</span>
+                <span class="pf-brand-email pf-mono">{{ lead.custom_responses['brand_email'] || lead.brand_email || '' }}</span>
+              </div>
+            </div>
+
+            <!-- Budget -->
+            <div class="pf-table__cell pf-table__cell--budget">
+              <span class="pf-mono" [class.flagged]="isFlagged(lead)">
+                {{ lead.budget ? (currencySymbol + (lead.budget | number:'1.0-0')) : '—' }}
+              </span>
+              <span class="pf-low-pill" *ngIf="isFlagged(lead)" title="Below minimum budget">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 22V4M4 15h12l-2-3 2-3H4"/>
+                </svg>
+                low
+              </span>
+            </div>
+
+            <!-- Status -->
+            <div class="pf-table__cell pf-table__cell--status" (click)="$event.stopPropagation()">
+              <div class="pf-status-dd" [class.open]="statusDdOpen === lead.id">
+                <button class="pf-status {{ lead.status }}"
+                        (click)="toggleStatusDd(lead.id, $event)">
+                  {{ lead.status }}
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+                <div class="pf-status-dd__menu" *ngIf="statusDdOpen === lead.id">
+                  <button *ngFor="let s of allStatuses"
+                          class="pf-status-dd__opt"
+                          [class.active]="lead.status === s"
+                          (click)="setStatus(lead, s)">
+                    <span class="pf-status {{ s }}">{{ s }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="pf-table__cell pf-table__cell--date">
+              <span class="pf-rel-time">{{ formatRel(lead.created_at) }}</span>
+            </div>
+
+            <!-- Chevron -->
+            <div class="pf-table__cell pf-table__cell--chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pf-pagination" *ngIf="filteredLeads.length > pageSize">
+        <span class="pf-pagination__info">{{ showingText }}</span>
+        <div class="pf-pagination__btns">
+          <button class="pf-btn pf-btn--sm" (click)="prevPage()" [disabled]="currentPage === 1">Prev</button>
+          <button class="pf-btn pf-btn--sm" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+        </div>
+      </div>
+
+    </div>
+
   </main>
 
-  <!-- Lead Detail Side Panel -->
-  <div class="panel-backdrop" *ngIf="selectedLead" (click)="closeLead()"></div>
-  <aside class="lead-panel" [class.open]="!!selectedLead">
-    <div class="panel-top">
-      <h2>Lead Details</h2>
-      <button class="panel-close" (click)="closeLead()" aria-label="Close panel">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+  <!-- Drawer scrim -->
+  <div class="pf-scrim pf-fade" *ngIf="openLeadId" (click)="closeLead()"></div>
+
+  <!-- Lead drawer -->
+  <aside class="pf-drawer pf-slide-left" *ngIf="openLeadId && selectedLead">
+    <!-- Drawer header -->
+    <div class="pf-drawer__head">
+      <div class="pf-brand-tile pf-brand-tile--lg" [style.background]="selectedLead.tileColor">
+        {{ selectedLead.initial }}
+      </div>
+      <div class="pf-drawer__head-info">
+        <div class="pf-drawer__head-name">
+          {{ selectedLead.custom_responses['brand_name'] || selectedLead.brand_name || '—' }}
+        </div>
+        <div class="pf-drawer__head-email pf-mono">
+          {{ selectedLead.custom_responses['brand_email'] || selectedLead.brand_email || '' }}
+        </div>
+      </div>
+      <button class="pf-btn pf-btn--ghost pf-btn--icon pf-drawer__close" (click)="closeLead()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
         </svg>
       </button>
     </div>
-    <div class="panel-body" *ngIf="selectedLead">
-      <div class="panel-status-row">
-        <span class="status-badge" [ngClass]="selectedLead.status">{{ selectedLead.status }}</span>
-      </div>
-      <div class="panel-field" *ngFor="let field of formSchema">
-        <span class="panel-label">{{ field.label }}</span>
-        <span class="panel-value">{{ selectedLead.custom_responses[field.id] || '—' }}</span>
-      </div>
-      <div class="panel-field" *ngIf="selectedLead.budget">
-        <span class="panel-label">Budget</span>
-        <span class="panel-value">${{ selectedLead.budget | number:'1.0-0' }}</span>
+
+    <!-- Status band -->
+    <div class="pf-drawer__status-band">
+      <div class="pf-status-dd" [class.open]="statusDdOpen === 'drawer'">
+        <button class="pf-status {{ selectedLead.status }}"
+                (click)="toggleStatusDd('drawer', $event)">
+          {{ selectedLead.status }}
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="pf-status-dd__menu" *ngIf="statusDdOpen === 'drawer'">
+          <button *ngFor="let s of allStatuses"
+                  class="pf-status-dd__opt"
+                  [class.active]="selectedLead.status === s"
+                  (click)="setStatus(selectedLead, s)">
+            <span class="pf-status {{ s }}">{{ s }}</span>
+          </button>
+        </div>
       </div>
     </div>
+
+    <!-- Drawer body -->
+    <div class="pf-drawer__body pf-scroll">
+
+      <!-- Budget card -->
+      <div class="pf-drawer__budget-card" [class.flagged]="isFlagged(selectedLead)" *ngIf="selectedLead.budget">
+        <span class="pf-label">Budget</span>
+        <span class="pf-drawer__budget-value pf-mono">
+          {{ currencySymbol }}{{ selectedLead.budget | number:'1.0-0' }}
+        </span>
+        <span class="pf-low-pill" *ngIf="isFlagged(selectedLead)">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 22V4M4 15h12l-2-3 2-3H4"/>
+          </svg>
+          Below your minimum ({{ currencySymbol }}{{ minimumBudget | number:'1.0-0' }})
+        </span>
+      </div>
+
+      <!-- Custom responses -->
+      <div class="pf-drawer__fields">
+        <div class="pf-drawer__field"
+             *ngFor="let field of drawerFields">
+          <span class="pf-label">{{ field.label }}</span>
+          <span class="pf-drawer__field-value">{{ field.value || '—' }}</span>
+        </div>
+      </div>
+
+      <hr class="pf-divider" style="margin: 16px 0;">
+
+      <!-- Received -->
+      <div class="pf-drawer__meta">
+        <span class="pf-label">Received</span>
+        <span style="font-size:13px;color:var(--ink-2)">{{ formatRel(selectedLead.created_at) }}</span>
+      </div>
+
+    </div>
+
+    <!-- Drawer footer -->
+    <div class="pf-drawer__footer">
+      <button class="pf-btn pf-btn--ghost" style="flex:1">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m22 6-10 7L2 6"/>
+        </svg>
+        Reply
+      </button>
+      <button class="pf-btn" style="flex:1;color:var(--status-rejected-ink)"
+              (click)="setStatus(selectedLead, 'rejected')">Reject</button>
+      <button class="pf-btn pf-btn--primary" style="flex:1"
+              (click)="setStatus(selectedLead, 'completed')">Accept</button>
+    </div>
   </aside>
+
 </div>

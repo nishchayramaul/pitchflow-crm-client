@@ -1,41 +1,110 @@
-<div class="dashboard-layout">
+<div class="pf-app-shell">
   <app-sidenav></app-sidenav>
 
-  <main class="dashboard-shell">
-    <header class="dashboard-nav">
-      <h1>Dashboard</h1>
-      <div class="actions">
-        <button
-          class="link-pill"
-          [title]="copied ? 'Copied!' : 'Copy link'"
-          [disabled]="!profileUrl"
-          (click)="copyLink()"
-        >
-          {{ profileUrl || 'No link yet' }}
+  <main class="pf-main pf-fade-up">
+
+    <!-- Topbar -->
+    <div class="pf-topbar">
+      <div class="pf-topbar__text">
+        <h1 class="pf-topbar__title">Good {{ timeOfDay }}, {{ firstName }}</h1>
+        <p class="pf-topbar__sub">Here's what's happening with your pitches today.</p>
+      </div>
+      <div class="pf-topbar__actions">
+        <button class="pf-btn" (click)="copyLink()" [disabled]="!profileUrl">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          {{ copied ? 'Copied!' : 'Copy pitch link' }}
+        </button>
+        <a [href]="'https://' + profileUrl" target="_blank" class="pf-btn" *ngIf="profileUrl">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>
+          </svg>
+          Preview form
+        </a>
+      </div>
+    </div>
+
+    <div class="pf-page-body">
+
+      <!-- Pitch link card -->
+      <div class="pf-link-card pf-card" *ngIf="profileUrl">
+        <div class="pf-link-card__icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <span class="pf-link-card__url pf-mono">{{ profileUrl }}</span>
+        <button class="pf-btn pf-btn--sm" (click)="copyLink()">
+          {{ copied ? 'Copied!' : 'Copy' }}
         </button>
       </div>
-    </header>
 
-    <section class="dashboard-card">
-      @if (loadError) {
-        <p class="error">{{ loadError }}</p>
-      } @else {
-        <p class="label">Welcome</p>
-        <h2>{{ displayName }}</h2>
-        <p class="subtext">Your public creator link is ready to share in bio.</p>
-        @if (copied) {
-          <p class="success">Link copied to clipboard!</p>
-        }
-      }
-    </section>
-
-    <!-- KPI Strip -->
-    <div class="kpi-strip">
-      <div class="kpi-card" *ngFor="let stat of stats">
-        <span class="kpi-value">{{ stat.value }}</span>
-        <span class="kpi-label">{{ stat.label }}</span>
-        <span class="kpi-sub">{{ stat.sub }}</span>
+      <!-- Stats row -->
+      <div class="pf-stats-row">
+        <div class="pf-stat-card pf-card" *ngFor="let stat of stats">
+          <span class="pf-stat-card__label">{{ stat.label }}</span>
+          <span class="pf-stat-card__value pf-mono" [class]="stat.colorClass">{{ stat.value }}</span>
+          <span class="pf-stat-card__hint">{{ stat.sub }}</span>
+        </div>
       </div>
+
+      <!-- Two-column: recent pitches + pro upsell -->
+      <div class="pf-dashboard-cols">
+
+        <!-- Recent pitches -->
+        <div class="pf-recent pf-card">
+          <div class="pf-recent__header">
+            <span class="pf-recent__title">Recent pitches</span>
+            <a routerLink="/leads" class="pf-btn pf-btn--ghost pf-btn--sm">View all</a>
+          </div>
+          <div class="pf-recent__empty" *ngIf="recentLeads.length === 0">
+            <p>No pitches yet. Share your link to get started.</p>
+          </div>
+          <div class="pf-recent__list" *ngIf="recentLeads.length > 0">
+            <div class="pf-recent__item" *ngFor="let lead of recentLeads">
+              <div class="pf-brand-tile" [style.background]="lead.tileColor">
+                {{ lead.initial }}
+              </div>
+              <div class="pf-recent__item-info">
+                <span class="pf-recent__item-name">{{ lead.brand_name || 'Unknown brand' }}</span>
+                <span class="pf-recent__item-budget pf-mono" *ngIf="lead.budget">
+                  {{ currencySymbol }}{{ lead.budget | number:'1.0-0' }}
+                </span>
+              </div>
+              <span class="pf-status {{ lead.status }}">{{ lead.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pro upsell -->
+        <div class="pf-upsell pf-card" *ngIf="tier === 'free'">
+          <div class="pf-upsell__blob"></div>
+          <span class="pf-upsell__pill">Pitchflow Pro</span>
+          <h3 class="pf-upsell__headline pf-serif">
+            Build a form that <em>looks like you.</em>
+          </h3>
+          <p class="pf-upsell__body">
+            Custom fields, team access, and priority support — everything a full-time creator needs.
+          </p>
+          <button class="pf-btn pf-btn--accent" (click)="upgradeToPro()">
+            Upgrade — $12/mo
+          </button>
+        </div>
+
+        <div class="pf-upsell pf-card pf-upsell--pro" *ngIf="tier === 'pro'">
+          <span class="pf-upsell__pill pf-upsell__pill--pro">Pro</span>
+          <h3 class="pf-upsell__headline pf-serif">You're on Pro.</h3>
+          <p class="pf-upsell__body">All features unlocked. Thank you for supporting Pitchflow.</p>
+        </div>
+
+      </div>
+
     </div>
 
   </main>

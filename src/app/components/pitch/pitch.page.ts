@@ -19,7 +19,9 @@ export class PitchPageComponent implements OnInit {
   creatorName = '';
   creatorSlug = '';
   loading = true;
+  submitting = false;
   error = '';
+  submitted = false;
 
   constructor(
     private fb: FormBuilder,
@@ -105,14 +107,25 @@ export class PitchPageComponent implements OnInit {
     }
   }
 
-  submitPitch() {
+  async submitPitch() {
     if (this.pitchForm.invalid) {
       this.pitchForm.markAllAsTouched();
       return;
     }
-    // TODO: POST to /api/leads once leads endpoint is built
-    console.log('Pitch payload:', this.pitchForm.value);
-    alert('Pitch sent successfully!');
-    this.pitchForm.reset();
+    this.submitting = true;
+    this.error = '';
+    try {
+      await firstValueFrom(
+        this.api.submitPitch({
+          slug: this.creatorSlug,
+          custom_responses: this.pitchForm.value,
+        })
+      );
+      this.submitted = true;
+    } catch (err: any) {
+      this.error = err?.error?.detail ?? 'Submission failed. Please try again.';
+    } finally {
+      this.submitting = false;
+    }
   }
 }

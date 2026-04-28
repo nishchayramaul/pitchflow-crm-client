@@ -1,0 +1,231 @@
+:host {
+  display: block;
+}
+
+/* ── Wrapper ─────────────────────────────────────────── */
+.cp-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Search bar ──────────────────────────────────────── */
+.cp-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cp-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.cp-search-input {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  width: 100%;
+  padding: 9px 32px 9px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+
+  &::placeholder { color: var(--muted-2); }
+
+  &:focus {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 3px oklch(from var(--ink) l c h / 0.06);
+  }
+}
+
+.cp-search-clear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: background 140ms ease, color 140ms ease;
+
+  &:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+
+/* ── Flat results list ───────────────────────────────── */
+.cp-results {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px;
+}
+
+.cp-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cp-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--surface-2); }
+
+  &.is-active {
+    background: var(--accent-soft);
+    .cp-r-code { color: var(--accent-ink); }
+  }
+}
+
+.cp-r-symbol {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  min-width: 22px;
+  text-align: center;
+}
+
+.cp-r-code {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 38px;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+.cp-r-name {
+  font-size: 13px;
+  color: var(--muted);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cp-r-check {
+  color: var(--accent-ink);
+  flex-shrink: 0;
+}
+
+/* ── Dial picker ─────────────────────────────────────── */
+.dial-container {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  cursor: ns-resize;
+  outline: none;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.6) 20%,
+    black 38%,
+    black 62%,
+    rgba(0,0,0,0.6) 80%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.6) 20%,
+    black 38%,
+    black 62%,
+    rgba(0,0,0,0.6) 80%,
+    transparent 100%
+  );
+
+  &:focus {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 3px oklch(from var(--ink) l c h / 0.06);
+  }
+}
+
+.dial-selector-line {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: calc(50% - 22px);
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dial-track {
+  will-change: transform;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.dial-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  cursor: pointer;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  transform-origin: center;
+
+  .di-symbol {
+    font-size: 1.0625rem;
+    min-width: 22px;
+    text-align: center;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .di-code {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ink);
+    min-width: 38px;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+  }
+
+  .di-name {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

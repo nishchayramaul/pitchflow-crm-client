@@ -1,126 +1,163 @@
-<div class="pitch-container">
-  <div class="pitch-card">
-    <!-- Loading State -->
-    <div *ngIf="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>Loading {{ creatorSlug }}'s form...</p>
+<div class="pf-pitch-page">
+  <div class="pf-pitch-card">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="pf-pitch-loading">
+      <div class="pf-spinner"></div>
+      <p>Loading {{ creatorSlug }}'s form…</p>
     </div>
 
-    <!-- Error State -->
-    <div *ngIf="error && !loading" class="error-state">
-      <h2>Oops!</h2>
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="pf-pitch-error">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+           stroke="var(--status-rejected-ink)" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      <h2>Form not found</h2>
       <p>{{ error }}</p>
-      <button class="btn-secondary" (click)="router.navigate(['/'])">Go Back</button>
+      <button class="pf-btn" (click)="router.navigate(['/'])">Go back</button>
     </div>
 
-    <!-- Form Content -->
-    <div *ngIf="!loading && !error">
-      <div class="header-section">
-        <h2>Pitch {{ creatorName }}</h2>
-        <p class="subtitle">Fill out the form below to propose a collaboration.</p>
+    <!-- Success screen -->
+    <div *ngIf="submitted && !loading && !error" class="pf-pitch-success pf-fade-up">
+      <div class="pf-pitch-success__icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+             stroke="var(--status-completed-ink)" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </div>
+      <h2 class="pf-pitch-success__headline pf-serif">
+        Pitch <em>received.</em>
+      </h2>
+      <p class="pf-pitch-success__body">
+        {{ creatorName }} will review your pitch and get back to you.
+      </p>
+      <button class="pf-btn" (click)="submitted = false; pitchForm.reset()">Send another</button>
+    </div>
+
+    <!-- Form -->
+    <div *ngIf="!loading && !error && !submitted" class="pf-fade-up">
+
+      <!-- Header -->
+      <div class="pf-pitch-header">
+        <div class="pf-pitch-avatar">{{ creatorName.charAt(0).toUpperCase() }}</div>
+        <h1 class="pf-pitch-title pf-serif">
+          Pitch <em>{{ creatorName }}.</em>
+        </h1>
+        <p class="pf-pitch-desc">Fill out the form below to propose a collaboration.</p>
       </div>
 
-      <form [formGroup]="pitchForm" (ngSubmit)="submitPitch()" class="dynamic-form">
+      <!-- Dynamic form -->
+      <form [formGroup]="pitchForm" (ngSubmit)="submitPitch()" class="pf-pitch-form">
 
-        <div *ngFor="let field of formSchema" class="form-field-wrapper">
-          <label>
-            {{ field.label }}
-            <span class="required" *ngIf="field.required">*</span>
+        <div *ngFor="let field of formSchema" class="pf-pitch-field">
+          <label class="pf-label">
+            {{ field.label }}<span *ngIf="field.required" class="pf-req-star">*</span>
           </label>
 
           <ng-container [ngSwitch]="field.type">
 
-            <!-- Text -->
-            <input *ngSwitchCase="'text'"
-                   type="text"
+            <input *ngSwitchCase="'text'" type="text"
+                   class="pf-input"
                    [formControlName]="field.id"
                    [placeholder]="field.placeholder || ''"
-                   [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+                   [class.pf-input--err]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
 
-            <!-- Email -->
-            <input *ngSwitchCase="'email'"
-                   type="email"
+            <input *ngSwitchCase="'email'" type="email"
+                   class="pf-input"
                    [formControlName]="field.id"
-                   [placeholder]="field.placeholder || 'email@example.com'"
-                   [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+                   [placeholder]="field.placeholder || 'email@company.com'"
+                   [class.pf-input--err]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
 
-            <!-- Textarea -->
+            <div *ngSwitchCase="'number'" class="pf-number-wrap">
+              <span class="pf-number-prefix pf-mono">$</span>
+              <input type="number"
+                     class="pf-input pf-input--number"
+                     [formControlName]="field.id"
+                     [placeholder]="field.placeholder || '0'"
+                     [class.pf-input--err]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+            </div>
+
             <textarea *ngSwitchCase="'textarea'"
+                      class="pf-input"
                       [formControlName]="field.id"
                       [placeholder]="field.placeholder || ''"
                       rows="4"
-                      [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched"></textarea>
+                      [class.pf-input--err]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched"></textarea>
 
-            <!-- Number -->
-            <input *ngSwitchCase="'number'"
-                   type="number"
-                   [formControlName]="field.id"
-                   [placeholder]="field.placeholder || ''"
-                   [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
-
-            <!-- Select -->
-            <select *ngSwitchCase="'select'" [formControlName]="field.id"
-                    [class.error]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
-              <option value="" disabled selected>Select an option...</option>
+            <select *ngSwitchCase="'select'" class="pf-input pf-select"
+                    [formControlName]="field.id"
+                    [class.pf-input--err]="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
+              <option value="" disabled selected>Select…</option>
               <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
             </select>
 
-            <!-- Radio -->
-            <div *ngSwitchCase="'radio'" class="radio-group">
-              <label *ngFor="let opt of field.options" class="radio-label">
+            <div *ngSwitchCase="'radio'" class="pf-pill-group">
+              <label *ngFor="let opt of field.options" class="pf-pill-opt">
                 <input type="radio" [value]="opt" [formControlName]="field.id">
-                {{ opt }}
+                <span>{{ opt }}</span>
               </label>
             </div>
 
-            <!-- Checkbox — multiselect (default) -->
-            <div *ngSwitchCase="'checkbox'" class="checkbox-group">
-              <ng-container *ngIf="field.multiselect !== false; else singleCheckbox">
-                <label *ngFor="let opt of field.options" class="checkbox-label">
-                  <input
-                    type="checkbox"
-                    [value]="opt"
-                    (change)="onCheckboxChange(field.id, opt, $any($event.target).checked)"
-                    [checked]="pitchForm.get(field.id)?.value?.includes(opt)">
-                  {{ opt }}
+            <div *ngSwitchCase="'checkbox'" class="pf-pill-group">
+              <ng-container *ngIf="field.multiselect !== false; else singleCb">
+                <label *ngFor="let opt of field.options" class="pf-pill-opt">
+                  <input type="checkbox" [value]="opt"
+                         (change)="onCheckboxChange(field.id, opt, $any($event.target).checked)"
+                         [checked]="pitchForm.get(field.id)?.value?.includes(opt)">
+                  <span>{{ opt }}</span>
                 </label>
               </ng-container>
-
-              <!-- Checkbox — single select -->
-              <ng-template #singleCheckbox>
-                <label *ngFor="let opt of field.options" class="checkbox-label">
-                  <input
-                    type="checkbox"
-                    [value]="opt"
-                    (change)="onSingleCheckboxChange(field.id, opt, $any($event.target).checked)"
-                    [checked]="pitchForm.get(field.id)?.value === opt">
-                  {{ opt }}
+              <ng-template #singleCb>
+                <label *ngFor="let opt of field.options" class="pf-pill-opt">
+                  <input type="checkbox" [value]="opt"
+                         (change)="onSingleCheckboxChange(field.id, opt, $any($event.target).checked)"
+                         [checked]="pitchForm.get(field.id)?.value === opt">
+                  <span>{{ opt }}</span>
                 </label>
               </ng-template>
             </div>
 
-            <!-- File -->
-            <input *ngSwitchCase="'file'"
-                   type="file"
-                   (change)="onFileSelected($event, field.id)"
-                   [accept]="field.allowedExtensions?.join(',') || '*/*'"
-                   class="file-input">
+            <label *ngSwitchCase="'file'" class="pf-dropzone">
+              <input type="file" class="pf-sr-only"
+                     (change)="onFileSelected($event, field.id)"
+                     [accept]="field.allowedExtensions?.join(',') || '*/*'">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+              </svg>
+              <span>Click or drag to upload</span>
+            </label>
 
           </ng-container>
 
-          <!-- Error messages — field-type-aware -->
+          <!-- Validation messages -->
           <ng-container *ngIf="pitchForm.get(field.id)?.invalid && pitchForm.get(field.id)?.touched">
-            <span class="error-msg" *ngIf="pitchForm.get(field.id)?.hasError('required')">
-              This field is required.
-            </span>
-            <span class="error-msg" *ngIf="pitchForm.get(field.id)?.hasError('email')">
-              Enter a valid email address.
-            </span>
+            <span class="pf-err-msg" *ngIf="pitchForm.get(field.id)?.hasError('required')">This field is required.</span>
+            <span class="pf-err-msg" *ngIf="pitchForm.get(field.id)?.hasError('email')">Enter a valid email.</span>
           </ng-container>
         </div>
 
-        <button type="submit" class="btn-submit" [disabled]="pitchForm.invalid">Send Pitch</button>
+        <button type="submit" class="pf-btn pf-btn--primary pf-pitch-submit"
+                [disabled]="pitchForm.invalid || submitting">
+          {{ submitting ? 'Sending…' : 'Send pitch' }}
+        </button>
+
       </form>
+
+      <div class="pf-pitch-footer">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Powered by Pitchflow
+      </div>
     </div>
+
   </div>
 </div>

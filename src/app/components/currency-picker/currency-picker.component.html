@@ -1,0 +1,77 @@
+<div class="cp-wrapper">
+
+  <!-- Search input -->
+  <div class="cp-search">
+    <svg class="cp-search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input
+      class="cp-search-input"
+      type="text"
+      [(ngModel)]="searchQuery"
+      placeholder="Search currency…"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Search currencies" />
+    <button *ngIf="searchQuery" class="cp-search-clear" (click)="searchQuery = ''" aria-label="Clear search">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Flat search results -->
+  <div *ngIf="isSearching" class="cp-results pf-scroll">
+    <div *ngIf="filteredCurrencies.length === 0" class="cp-empty">
+      No currencies match "{{ searchQuery }}"
+    </div>
+    <button
+      *ngFor="let c of filteredCurrencies"
+      class="cp-result-item"
+      [class.is-active]="c.code === selectedCurrency.code"
+      (click)="selectFromSearch(c)"
+      type="button">
+      <span class="cp-r-symbol">{{ c.symbol }}</span>
+      <span class="cp-r-code">{{ c.code }}</span>
+      <span class="cp-r-name">{{ c.name }}</span>
+      <svg *ngIf="c.code === selectedCurrency.code" class="cp-r-check" width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Dial picker -->
+  <div
+    *ngIf="!isSearching"
+    class="dial-container"
+    (wheel)="onWheel($event)"
+    (keydown)="onKey($event)"
+    (mousedown)="onDragStart($event)"
+    (touchstart)="onTouchStart($event)"
+    tabindex="0"
+    role="listbox"
+    [attr.aria-label]="'Currency selector'"
+    [attr.aria-activedescendant]="'currency-' + selectedIndex">
+
+    <div class="dial-selector-line"></div>
+
+    <div class="dial-track" [style.transform]="trackTransform">
+      <div
+        *ngFor="let c of currencies; let i = index"
+        class="dial-item"
+        [class.is-selected]="i === selectedIndex"
+        [style.opacity]="itemOpacity(i)"
+        [style.transform]="'scale(' + itemScale(i) + ')'"
+        (click)="select(i)"
+        role="option"
+        [id]="'currency-' + i"
+        [attr.aria-selected]="i === selectedIndex">
+        <span class="di-symbol">{{ c.symbol }}</span>
+        <span class="di-code">{{ c.code }}</span>
+        <span class="di-name">{{ c.name }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>

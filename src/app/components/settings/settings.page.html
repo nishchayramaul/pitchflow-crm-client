@@ -1,195 +1,385 @@
-<div class="dashboard-layout">
+<div class="pf-app-shell">
   <app-sidenav></app-sidenav>
 
-  <main class="dashboard-shell">
-    <header class="dashboard-nav">
-      <h1>Settings & Form Builder</h1>
-    </header>
+  <main class="pf-main pf-fade-up">
 
-    <section class="dashboard-card form-builder-card">
-      <div class="builder-container" [class.gated]="tier === 'free'">
+    <!-- Topbar -->
+    <div class="pf-topbar">
+      <div class="pf-topbar__text">
+        <h1 class="pf-topbar__title">Settings</h1>
+        <p class="pf-topbar__sub">Manage your form, preferences, and account.</p>
+      </div>
+    </div>
 
-        <div class="add-field-panel">
-          <h3>Add New Field</h3>
-          <form [formGroup]="newFieldForm" (ngSubmit)="addField()" class="add-form">
+    <!-- Sub-tabs -->
+    <div class="pf-sub-tabs">
+      <button *ngFor="let t of settingsTabs"
+              class="pf-sub-tab"
+              [class.active]="activeSettingsTab === t.id"
+              (click)="activeSettingsTab = t.id">
+        {{ t.label }}
+      </button>
+    </div>
 
-            <div class="input-group">
-              <label>Field Type</label>
-              <select formControlName="type" (change)="onTypeChange()">
-                <option *ngFor="let t of fieldTypes" [value]="t">{{ t }}</option>
-              </select>
+    <!-- ── Form Builder Tab ─────────────────────────────── -->
+    <div class="pf-settings-body" *ngIf="activeSettingsTab === 'form'">
+      <div class="pf-settings-cols">
+
+        <!-- Left: field list -->
+        <div class="pf-card pf-settings-card">
+          <div class="pf-settings-card__head">
+            <div>
+              <div class="pf-settings-card__title">Form builder</div>
+              <div class="pf-settings-card__sub">Drag to reorder. Click to edit.</div>
             </div>
+            <button class="pf-btn pf-btn--primary pf-btn--sm"
+                    [disabled]="tier === 'free'"
+                    (click)="showAddPanel = !showAddPanel">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Add field
+            </button>
+          </div>
 
-            <div class="input-group">
-              <label>Label</label>
-              <input type="text" formControlName="label" placeholder="e.g., Company Name" />
-            </div>
-
-            <div class="input-group">
-              <label>Placeholder</label>
-              <input type="text" formControlName="placeholder" placeholder="Optional" />
-            </div>
-
-            <!-- Options editor: select / radio / checkbox only -->
-            <div class="input-group" *ngIf="needsOptions">
-              <label>Options</label>
-              <div class="options-list">
-                <!--
-                  trackBy: trackByIndex prevents DOM recreation on each change detection cycle.
-                  [(ngModel)] + unique [name] gives each input isolated two-way binding.
-                  This is the fix for simultaneous cross-option state bleed.
-                -->
-                <div
-                  *ngFor="let opt of draftOptions; let i = index; trackBy: trackByIndex"
-                  class="option-row">
-                  <input
-                    type="text"
-                    [(ngModel)]="draftOptions[i]"
-                    [name]="'draft-opt-' + i"
-                    [ngModelOptions]="{standalone: true}"
-                    placeholder="Option label" />
-                  <button
-                    type="button"
-                    class="btn-icon"
-                    (click)="removeDraftOption(i)"
-                    [disabled]="draftOptions.length <= 1">✕</button>
+          <!-- Add field panel (inline) -->
+          <div class="pf-add-panel" *ngIf="showAddPanel && tier === 'pro'">
+            <form [formGroup]="newFieldForm" (ngSubmit)="addField(); showAddPanel = false" class="pf-add-form">
+              <div class="pf-form-row">
+                <div class="pf-form-group">
+                  <label class="pf-label">Type</label>
+                  <select class="pf-input pf-input--sm" formControlName="type" (change)="onTypeChange()">
+                    <option *ngFor="let t of fieldTypes" [value]="t">{{ t }}</option>
+                  </select>
+                </div>
+                <div class="pf-form-group" style="flex:2">
+                  <label class="pf-label">Label</label>
+                  <input class="pf-input pf-input--sm" type="text" formControlName="label" placeholder="e.g. Company size">
                 </div>
               </div>
-              <button type="button" class="btn-add-option" (click)="addDraftOption()">+ Add Option</button>
-            </div>
 
-            <!-- Multiselect toggle: checkbox only -->
-            <div class="toggle-group" *ngIf="isCheckboxType">
-              <label class="toggle-label">
-                <span>Allow multiple selections</span>
-                <input type="checkbox" [(ngModel)]="draftMultiselect" [ngModelOptions]="{standalone: true}" />
-              </label>
-            </div>
+              <div class="pf-form-group" *ngIf="needsOptions">
+                <label class="pf-label">Options</label>
+                <div class="pf-opts-list">
+                  <div class="pf-opt-row" *ngFor="let opt of draftOptions; let i = index; trackBy: trackByIndex">
+                    <input class="pf-input pf-input--sm" type="text"
+                           [(ngModel)]="draftOptions[i]" [ngModelOptions]="{standalone:true}"
+                           placeholder="Option {{ i+1 }}">
+                    <button type="button" class="pf-btn pf-btn--ghost pf-btn--icon pf-btn--sm"
+                            (click)="removeDraftOption(i)" [disabled]="draftOptions.length <= 1">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" (click)="addDraftOption()">+ Add option</button>
+              </div>
 
-            <div class="checkbox-group">
-              <input type="checkbox" id="req" formControlName="required" />
-              <label for="req">Required</label>
-            </div>
+              <div class="pf-form-row pf-form-row--footer">
+                <label class="pf-checkbox-label">
+                  <input type="checkbox" formControlName="required">
+                  <span>Required</span>
+                </label>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm"
+                          (click)="showAddPanel=false">Cancel</button>
+                  <button type="submit" class="pf-btn pf-btn--primary pf-btn--sm"
+                          [disabled]="newFieldForm.invalid">Add</button>
+                </div>
+              </div>
+            </form>
+          </div>
 
-            <button type="submit" [disabled]="newFieldForm.invalid" class="btn-primary">Add Field</button>
-          </form>
+          <!-- Pro gate overlay -->
+          <div class="pf-gate" *ngIf="tier === 'free'">
+            <div class="pf-gate__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <p class="pf-gate__text">Form builder requires Pro.</p>
+            <button class="pf-btn pf-btn--accent pf-btn--sm" (click)="upgradeToPro()">Upgrade — $12/mo</button>
+          </div>
+
+          <!-- Field list -->
+          <div cdkDropList class="pf-field-list" (cdkDropListDropped)="drop($event)"
+               *ngIf="tier === 'pro'">
+            <div
+              *ngFor="let field of formSchema; let i = index"
+              class="pf-field-row"
+              [class.is-locked]="field.locked"
+              [class.is-editing]="editingIndex === i"
+              cdkDrag
+              [cdkDragDisabled]="!!field.locked || editingIndex === i">
+
+              <div class="pf-field-row__inner">
+                <!-- Drag handle -->
+                <div class="pf-drag-handle" cdkDragHandle [class.disabled]="!!field.locked">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="1.8">
+                    <circle cx="9" cy="6" r="1" fill="currentColor"/>
+                    <circle cx="9" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="9" cy="18" r="1" fill="currentColor"/>
+                    <circle cx="15" cy="6" r="1" fill="currentColor"/>
+                    <circle cx="15" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="15" cy="18" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+
+                <!-- Info -->
+                <div class="pf-field-row__info">
+                  <span class="pf-field-row__label">{{ field.label }}</span>
+                  <div class="pf-field-row__tags">
+                    <span class="pf-tag">{{ field.type }}</span>
+                    <span class="pf-tag pf-tag--req" *ngIf="field.required">required</span>
+                    <span class="pf-tag pf-tag--locked" *ngIf="field.locked">locked</span>
+                    <span class="pf-tag pf-tag--multi" *ngIf="field.type === 'checkbox' && field.multiselect !== false">multi</span>
+                  </div>
+                  <span class="pf-field-row__opts" *ngIf="field.options?.length">
+                    {{ field.options!.join(' · ') }}
+                  </span>
+                </div>
+
+                <!-- Actions -->
+                <div class="pf-field-row__actions">
+                  <button type="button" class="pf-btn pf-btn--ghost pf-btn--icon pf-btn--sm"
+                          [disabled]="!!field.locked"
+                          (click)="editingIndex === i ? cancelEdit() : startEdit(i)"
+                          title="Edit">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="pf-btn pf-btn--ghost pf-btn--icon pf-btn--sm"
+                          [disabled]="!!field.locked"
+                          (click)="deleteField(i)"
+                          title="Delete">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inline edit -->
+              <div class="pf-field-edit" *ngIf="editingIndex === i">
+                <div class="pf-form-group">
+                  <label class="pf-label">Label</label>
+                  <input class="pf-input pf-input--sm" type="text"
+                         [(ngModel)]="editBuffer.label" name="edit-label" placeholder="Field label">
+                </div>
+                <div class="pf-form-group" *ngIf="fieldHasOptions(field)">
+                  <label class="pf-label">Options</label>
+                  <div class="pf-opts-list">
+                    <div class="pf-opt-row" *ngFor="let opt of editBuffer.options; let j = index; trackBy: trackByIndex">
+                      <input class="pf-input pf-input--sm" type="text"
+                             [(ngModel)]="editBuffer.options[j]"
+                             [name]="'edit-opt-' + editingIndex + '-' + j"
+                             placeholder="Option {{ j+1 }}">
+                      <button type="button" class="pf-btn pf-btn--ghost pf-btn--icon pf-btn--sm"
+                              (click)="removeEditOption(j)" [disabled]="editBuffer.options.length <= 1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" (click)="addEditOption()">+ Add</button>
+                </div>
+                <label class="pf-checkbox-label" *ngIf="field.type === 'checkbox'">
+                  <input type="checkbox" [(ngModel)]="editBuffer.multiselect" [name]="'edit-multi-' + i">
+                  <span>Allow multiple selections</span>
+                </label>
+                <label class="pf-checkbox-label">
+                  <input type="checkbox" [id]="'req-edit-' + i" [(ngModel)]="editBuffer.required" [name]="'edit-req-' + i">
+                  <span>Required</span>
+                </label>
+                <div class="pf-edit-actions">
+                  <button type="button" class="pf-btn pf-btn--primary pf-btn--sm" (click)="saveEdit()">Save</button>
+                  <button type="button" class="pf-btn pf-btn--ghost pf-btn--sm" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="pf-field-footer" *ngIf="tier === 'pro'">
+            <button class="pf-btn pf-btn--primary"
+                    (click)="saveSchema()" [disabled]="saveLoading">
+              {{ saveLoading ? 'Saving…' : 'Save form' }}
+            </button>
+          </div>
         </div>
 
-        <div class="schema-preview-panel">
-          <div class="panel-header">
-            <h3>Your Custom Pitch Form</h3>
-            <div style="display:flex;align-items:center;gap:0.75rem">
-              <button class="btn-secondary" (click)="saveSchema()" [disabled]="saveLoading">
-                {{ saveLoading ? 'Saving...' : 'Save Form' }}
+        <!-- Right: live preview -->
+        <div class="pf-card pf-settings-card pf-preview-card">
+          <div class="pf-settings-card__head">
+            <div>
+              <div class="pf-settings-card__eyebrow">Live preview</div>
+              <div class="pf-settings-card__title">Pitch form</div>
+            </div>
+          </div>
+          <div class="pf-preview-form">
+            <div *ngFor="let field of formSchema" class="pf-preview-field">
+              <label class="pf-label">
+                {{ field.label }}<span *ngIf="field.required" style="color:var(--status-rejected-ink)"> *</span>
+              </label>
+              <ng-container [ngSwitch]="field.type">
+                <input *ngSwitchCase="'text'"    class="pf-input" [placeholder]="field.placeholder || ''" readonly>
+                <input *ngSwitchCase="'email'"   class="pf-input" [placeholder]="field.placeholder || 'email@brand.com'" readonly>
+                <input *ngSwitchCase="'number'"  class="pf-input" [placeholder]="field.placeholder || '0'" readonly>
+                <textarea *ngSwitchCase="'textarea'" class="pf-input" rows="3" [placeholder]="field.placeholder || ''" readonly></textarea>
+                <select *ngSwitchCase="'select'" class="pf-input">
+                  <option *ngFor="let o of field.options">{{ o }}</option>
+                </select>
+                <div *ngSwitchCase="'radio'" class="pf-preview-pills">
+                  <span *ngFor="let o of field.options" class="pf-preview-pill">{{ o }}</span>
+                </div>
+                <div *ngSwitchCase="'checkbox'" class="pf-preview-pills">
+                  <span *ngFor="let o of field.options" class="pf-preview-pill">{{ o }}</span>
+                </div>
+                <div *ngSwitchCase="'file'" class="pf-preview-dropzone">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+                  </svg>
+                  Click or drag to upload
+                </div>
+              </ng-container>
+            </div>
+            <button class="pf-btn pf-btn--primary" style="width:100%;justify-content:center" disabled>
+              Send pitch
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Currency Tab ─────────────────────────────────── -->
+    <div class="pf-settings-body" *ngIf="activeSettingsTab === 'currency'">
+      <div class="pf-settings-cols">
+        <div class="pf-card pf-settings-card">
+          <div class="pf-settings-card__head">
+            <div>
+              <div class="pf-settings-card__title">Currency</div>
+              <div class="pf-settings-card__sub">Sets the symbol displayed across budgets.</div>
+            </div>
+          </div>
+          <app-currency-picker [value]="selectedCurrency" (valueChange)="onCurrencyChange($event)">
+          </app-currency-picker>
+          <div class="pf-settings-card__foot">
+            <button class="pf-btn pf-btn--primary" (click)="saveCurrency()" [disabled]="currencySaving">
+              {{ currencySaving ? 'Saving…' : 'Save currency' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="pf-card pf-settings-card">
+          <div class="pf-settings-card__head">
+            <div>
+              <div class="pf-settings-card__eyebrow">Preview</div>
+              <div class="pf-settings-card__title">How it shows up</div>
+            </div>
+          </div>
+          <div class="pf-currency-preview">
+            <span class="pf-label">Pipeline value</span>
+            <span class="pf-currency-preview__value pf-mono">{{ currencySymbol }}35,000</span>
+            <span style="font-size:12px;color:var(--muted)">Active deals · 3 leads</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Minimum Budget Tab ───────────────────────────── -->
+    <div class="pf-settings-body" *ngIf="activeSettingsTab === 'budget'">
+      <div class="pf-settings-cols">
+        <div class="pf-card pf-settings-card">
+          <div class="pf-settings-card__head">
+            <div>
+              <div class="pf-settings-card__title">Minimum budget</div>
+              <div class="pf-settings-card__sub">Pitches below this amount are flagged in your leads table.</div>
+            </div>
+          </div>
+          <div class="pf-budget-input-wrap">
+            <div class="pf-budget-input-row">
+              <span class="pf-budget-symbol pf-mono">{{ currencySymbol }}</span>
+              <input class="pf-input pf-budget-input pf-mono"
+                     type="number"
+                     [(ngModel)]="minimumBudget"
+                     min="0" step="1" placeholder="0"
+                     (keydown)="onBudgetKeydown($event)">
+            </div>
+            <button class="pf-btn pf-btn--primary"
+                    (click)="saveMinimumBudget()"
+                    [disabled]="budgetSaving || minimumBudget === null">
+              {{ budgetSaving ? 'Saving…' : 'Save' }}
+            </button>
+          </div>
+          <div class="pf-tip-card">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>
+            </svg>
+            Most creators set this at 60–80% of their typical deal size.
+          </div>
+        </div>
+
+        <!-- Mini preview table -->
+        <div class="pf-card pf-settings-card">
+          <div class="pf-settings-card__head">
+            <div>
+              <div class="pf-settings-card__eyebrow">Preview</div>
+              <div class="pf-settings-card__title">How the flag appears</div>
+            </div>
+          </div>
+          <div class="pf-budget-preview">
+            <div class="pf-budget-preview__row" *ngFor="let ex of budgetExamples">
+              <div class="pf-brand-tile pf-brand-tile--sm" [style.background]="ex.color">{{ ex.init }}</div>
+              <span class="pf-budget-preview__name">{{ ex.name }}</span>
+              <span class="pf-mono" [class.flagged]="ex.amount < (minimumBudget || 0)">
+                {{ currencySymbol }}{{ ex.amount | number:'1.0-0' }}
+              </span>
+              <span class="pf-low-pill" *ngIf="ex.amount < (minimumBudget || 0)">low</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Account Tab ──────────────────────────────────── -->
+    <div class="pf-settings-body" *ngIf="activeSettingsTab === 'account'">
+      <div class="pf-account-card pf-card">
+        <div class="pf-account-avatar">{{ accountInitial }}</div>
+        <div class="pf-account-info">
+          <div class="pf-account-name">{{ accountName }}</div>
+          <div class="pf-account-email pf-mono">{{ accountEmail }}</div>
+        </div>
+        <span class="pf-account-tier" [class.pro]="tier === 'pro'">
+          {{ tier === 'pro' ? 'Pro' : 'Free' }}
+        </span>
+        <hr class="pf-divider" style="margin:20px 0">
+        <div class="pf-account-rows">
+          <div class="pf-account-row">
+            <span class="pf-label">Plan</span>
+            <div class="pf-account-row__val">
+              <span>{{ tier === 'pro' ? 'Pitchflow Pro' : 'Free plan' }}</span>
+              <button class="pf-btn pf-btn--accent pf-btn--sm" *ngIf="tier === 'free'" (click)="upgradeToPro()">
+                Upgrade to Pro
               </button>
             </div>
           </div>
-
-          <div cdkDropList class="field-list" (cdkDropListDropped)="drop($event)">
-            <div
-              *ngFor="let field of formSchema; let i = index"
-              class="field-box"
-              [class.is-editing]="editingIndex === i"
-              cdkDrag
-              [cdkDragDisabled]="editingIndex === i">
-
-              <!-- Summary row -->
-              <div class="field-summary">
-                <div class="field-drag-handle" cdkDragHandle>
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path>
-                  </svg>
-                </div>
-                <div class="field-info">
-                  <strong>{{ field.label }}</strong>
-                  <span class="badge">{{ field.type }}</span>
-                  <span class="badge badge-multi" *ngIf="field.type === 'checkbox' && field.multiselect !== false">multi</span>
-                  <span class="required-asterisk" *ngIf="field.required">*</span>
-                  <span class="options-preview" *ngIf="field.options?.length">
-                    {{ field.options!.join(', ') }}
-                  </span>
-                </div>
-                <button
-                  class="btn-icon edit-icon"
-                  type="button"
-                  (click)="editingIndex === i ? cancelEdit() : startEdit(i)"
-                  [title]="editingIndex === i ? 'Cancel' : 'Edit'">
-                  {{ editingIndex === i ? '✕' : '✎' }}
-                </button>
-                <button class="btn-icon" type="button" (click)="deleteField(i)" title="Delete">🗑</button>
-              </div>
-
-              <!-- Inline edit panel -->
-              <div class="field-edit-panel" *ngIf="editingIndex === i">
-                <div class="input-group">
-                  <label>Label</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="editBuffer.label"
-                    name="edit-label"
-                    placeholder="Field label" />
-                </div>
-
-                <div *ngIf="fieldHasOptions(field)" class="input-group">
-                  <label>Options</label>
-                  <div class="options-list">
-                    <div
-                      *ngFor="let opt of editBuffer.options; let j = index; trackBy: trackByIndex"
-                      class="option-row">
-                      <input
-                        type="text"
-                        [(ngModel)]="editBuffer.options[j]"
-                        [name]="'edit-opt-' + editingIndex + '-' + j"
-                        placeholder="Option label" />
-                      <button
-                        type="button"
-                        class="btn-icon"
-                        (click)="removeEditOption(j)"
-                        [disabled]="editBuffer.options.length <= 1">✕</button>
-                    </div>
-                  </div>
-                  <button type="button" class="btn-add-option" (click)="addEditOption()">+ Add Option</button>
-                </div>
-
-                <!-- Multiselect toggle in edit panel -->
-                <div class="toggle-group" *ngIf="field.type === 'checkbox'">
-                  <label class="toggle-label">
-                    <span>Allow multiple selections</span>
-                    <input type="checkbox" [(ngModel)]="editBuffer.multiselect" [name]="'edit-multi-' + i" />
-                  </label>
-                </div>
-
-                <div class="checkbox-group">
-                  <input type="checkbox" [id]="'req-edit-' + i" [(ngModel)]="editBuffer.required" [name]="'edit-req-' + i" />
-                  <label [for]="'req-edit-' + i">Required</label>
-                </div>
-
-                <div class="edit-actions">
-                  <button type="button" class="btn-primary save-edit-btn" (click)="saveEdit()">Save</button>
-                  <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancel</button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <div *ngIf="formSchema.length === 0" class="empty-state">
-            <p>No fields added yet. Add a field from the left panel.</p>
-          </div>
         </div>
       </div>
+    </div>
 
-      <div class="upgrade-overlay" *ngIf="tier === 'free'">
-        <div class="overlay-content">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor" class="lock-icon">
-            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path>
-          </svg>
-          <h2>Custom Form Fields</h2>
-          <p>Upgrade to Pro to customize the fields on your pitch page and collect exactly the information you need from brands.</p>
-          <button class="btn-primary upgrade-btn" (click)="upgradeToPro()">Upgrade to Pro</button>
-        </div>
-      </div>
-
-    </section>
   </main>
 </div>

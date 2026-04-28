@@ -4,20 +4,48 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
 import { FormField } from '../../models/api.models';
+import { CurrencyService } from '../../services/currency.service';
 import { OnboardingApiService } from '../../services/onboarding-api.service';
 import { ToastService } from '../../services/toast.service';
+import { CurrencyPickerComponent } from '../currency-picker/currency-picker.component';
 import { SidenavComponent } from '../sidenav/sidenav.component';
+
+const DEFAULT_FIELDS: FormField[] = [
+  { id: 'brand_name',  type: 'text',   label: 'Brand Name',  required: true, placeholder: 'Your brand or company name' },
+  { id: 'brand_email', type: 'email',  label: 'Brand Email', required: true, placeholder: 'contact@brand.com' },
+  { id: 'budget',      type: 'number', label: 'Budget',      required: true, placeholder: 'e.g. 5000' },
+];
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DragDropModule, SidenavComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DragDropModule, SidenavComponent, CurrencyPickerComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss'
 })
 export class SettingsPageComponent implements OnInit {
   formSchema: FormField[] = [];
   tier: 'free' | 'pro' = 'free';
+
+  activeSettingsTab: 'form' | 'currency' | 'budget' | 'account' = 'form';
+  settingsTabs: { id: 'form' | 'currency' | 'budget' | 'account'; label: string }[] = [
+    { id: 'form',     label: 'Form builder'    },
+    { id: 'currency', label: 'Currency'        },
+    { id: 'budget',   label: 'Minimum budget'  },
+    { id: 'account',  label: 'Account'         },
+  ];
+
+  showAddPanel = false;
+
+  accountName  = '';
+  accountEmail = '';
+  accountInitial = '';
+
+  budgetExamples = [
+    { name: 'Nike',   amount: 5000,  init: 'N', color: 'linear-gradient(135deg,oklch(0.78 0.10 35),oklch(0.62 0.13 35))' },
+    { name: 'Adidas', amount: 1200,  init: 'A', color: 'linear-gradient(135deg,oklch(0.78 0.10 220),oklch(0.62 0.13 220))' },
+    { name: 'Puma',   amount: 800,   init: 'P', color: 'linear-gradient(135deg,oklch(0.78 0.10 155),oklch(0.62 0.13 155))' },
+  ];
 
   newFieldForm: FormGroup;
   fieldTypes = ['text', 'email', 'textarea', 'number', 'select', 'radio', 'checkbox', 'file'];
@@ -34,12 +62,21 @@ export class SettingsPageComponent implements OnInit {
 
   saveLoading = false;
 
+  minimumBudget: number | null = null;
+  budgetSaving = false;
+
+  selectedCurrency = 'USD';
+  currencySaving = false;
+
   private readonly optionTypes = ['select', 'radio', 'checkbox'];
+
+  get currencySymbol(): string { return this.currencyService.symbol; }
 
   constructor(
     private api: OnboardingApiService,
     private fb: FormBuilder,
-    private toast: ToastService
+    private toast: ToastService,
+    private currencyService: CurrencyService
   ) {
     this.newFieldForm = this.fb.group({
       type: ['text', Validators.required],
@@ -53,7 +90,15 @@ export class SettingsPageComponent implements OnInit {
     try {
       const profile = await firstValueFrom(this.api.getMe());
       this.tier = profile.tier ?? 'free';
-      this.formSchema = profile.form_schema ?? [];
+      this.formSchema = (profile.form_schema && profile.form_schema.length > 0)
+        ? profile.form_schema
+        : [...DEFAULT_FIELDS];
+      this.minimumBudget = profile.minimum_budget ?? null;
+      this.selectedCurrency = profile.currency ?? 'USD';
+      this.currencyService.set(this.selectedCurrency);
+      this.accountName    = profile.display_name ?? '';
+      this.accountEmail   = profile.email        ?? '';
+      this.accountInitial = this.accountName.charAt(0).toUpperCase() || 'U';
     } catch (err: any) {
       this.toast.error(err?.error?.detail ?? 'Could not load form configuration.', 'Load Failed');
     }
@@ -191,5 +236,41 @@ export class SettingsPageComponent implements OnInit {
 
   upgradeToPro() {
     this.tier = 'pro';
+  }
+
+  onCurrencyChange(code: string): void {
+    this.selectedCurrency = code;
+    this.currencyService.set(code);
+  }
+
+  async saveCurrency(): Promise<void> {
+    this.currencySaving = true;
+    try {
+      await firstValueFrom(this.api.updateCurrency(this.selectedCurrency));
+      this.toast.success(`Currency set to ${this.selectedCurrency}.`, 'Saved');
+    } catch (err: any) {
+      this.toast.error(err?.error?.detail ?? 'Failed to save currency.', 'Save Failed');
+    } finally {
+      this.currencySaving = false;
+    }
+  }
+
+  async saveMinimumBudget() {
+    if (this.minimumBudget === null || this.minimumBudget < 0) return;
+    this.budgetSaving = true;
+    try {
+      await firstValueFrom(this.api.updateMinimumBudget(this.minimumBudget));
+      this.toast.success('Minimum budget updated.', 'Saved');
+    } catch (err: any) {
+      this.toast.error(err?.error?.detail ?? 'Failed to save. Please try again.', 'Save Failed');
+    } finally {
+      this.budgetSaving = false;
+    }
+  }
+
+  onBudgetKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      void this.saveMinimumBudget();
+    }
   }
 }

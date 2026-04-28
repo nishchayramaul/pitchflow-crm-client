@@ -3,25 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { AuthSessionService } from '../../services/auth-session.service';
 import { ProfileStateFacade } from '../../services/profile-state.facade';
-import sidenavConfig from '../../config/sidenav.config.json';
-
-interface SidenavIcon {
-  url?: string;
-  path?: string;
-  name: string;
-}
-
-interface SidenavItem {
-  label: string;
-  name: string;
-  url: string;
-  icon: SidenavIcon;
-}
-
-interface SidenavConfig {
-  logo: SidenavIcon;
-  items: SidenavItem[];
-}
 
 @Component({
   selector: 'app-sidenav',
@@ -31,8 +12,9 @@ interface SidenavConfig {
   styleUrl: './sidenav.component.scss'
 })
 export class SidenavComponent implements OnInit {
-  isCollapsed = false;
-  config: SidenavConfig = sidenavConfig;
+  displayName = '';
+  slug = '';
+  initial = '';
 
   constructor(
     private readonly authSessionService: AuthSessionService,
@@ -40,10 +22,15 @@ export class SidenavComponent implements OnInit {
     private readonly router: Router
   ) {}
 
-  ngOnInit(): void {}
-
-  toggleCollapse(): void {
-    this.isCollapsed = !this.isCollapsed;
+  async ngOnInit(): Promise<void> {
+    try {
+      const state = await this.profileStateFacade.getProfileLoadState();
+      if (state.status === 'complete') {
+        this.displayName = state.displayName;
+        this.slug = state.profileUrl.replace('pitchflow.in/', '');
+        this.initial = this.displayName.charAt(0).toUpperCase();
+      }
+    } catch { /* non-critical */ }
   }
 
   async signOut(): Promise<void> {

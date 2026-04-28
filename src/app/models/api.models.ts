@@ -18,6 +18,7 @@ export interface FormField {
   placeholder?: string;
   options?: string[];        // select / radio / checkbox
   multiselect?: boolean;     // checkbox only — undefined/true = multi, false = single
+  locked?: boolean;          // brand_name / brand_email / budget — cannot delete or drag
   allowedExtensions?: string[];
 }
 
@@ -30,9 +31,39 @@ export interface UserProfileResponse {
   tier?: 'free' | 'pro';
   role?: 'creator' | 'team_member';
   form_schema?: FormField[];
+  minimum_budget?: number | null;
+  currency?: string | null;
 }
 
 export interface PublicPitchFormResponse {
   display_name: string;
   form_schema: FormField[];
+}
+
+export interface SubmitPitchPayload {
+  slug: string;
+  custom_responses: Record<string, any>;
+}
+
+export interface Lead {
+  id: string;
+  brand_name: string | null;
+  brand_email: string | null;
+  budget: number | null;
+  custom_responses: Record<string, any>;
+  status: string;
+  created_at: string;
+}
+
+export interface LeadsResponse {
+  items: Lead[];
+  total: number;
+  page: number;
+  page_size: number;
+  minimum_budget: number | null;
+  currency: string | null;
+}
+
+export interface UpdateLeadStatusPayload {
+  status: string;
 }
